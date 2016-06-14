@@ -1,0 +1,59 @@
+PODS:
+  - Alamofire (3.4.0)
+  - AlamofireImage (2.4.0):
+    - Alamofire (~> 3.3)
+  - ChameleonFramework/Default (2.1.0)
+  - ChameleonFramework/Swift (2.1.0):
+    - ChameleonFramework/Default
+  - DGElasticPullToRefresh (1.0.3)
+  - DMMaterialTransition (1.0.0)
+  - MBProgressHUD (0.9.2)
+  - pop (1.0.9)
+  - RAMAnimatedTabBarController (1.4.0)
+  - Realm (1.0.0):
+    - Realm/Headers (= 1.0.0)
+  - Realm/Headers (1.0.0)
+  - RealmSwift (1.0.0):
+    - Realm (= 1.0.0)
+  - RESideMenu (4.0.7)
+  - Ruler (0.7.0)
+  - SDCycleScrollView (1.65):
+    - SDWebImage (~> 3.7)
+  - SDWebImage (3.7.6):
+    - SDWebImage/Core (= 3.7.6)
+  - SDWebImage/Core (3.7.6)
+
+DEPENDENCIES:
+  - Alamofire
+  - AlamofireImage
+  - ChameleonFramework/Swift
+  - DGElasticPullToRefresh
+  - DMMaterialTransition
+  - MBProgressHUD
+  - pop
+  - RAMAnimatedTabBarController
+  - RealmSwift
+  - RESideMenu
+  - Ruler
+  - SDCycleScrollView
+  - SDWebImage
+
+SPEC CHECKSUMS:
+  Alamofire: c19a627cefd6a95f840401c49ab1f124e07f54ee
+  AlamofireImage: 87408b652e0f5ae5fe364035f15aea8b9b24c77e
+  ChameleonFramework: d21a3cc247abfe5e37609a283a8238b03575cf64
+  DGElasticPullToRefresh: 040f39ae69840b3261d163fe6735c5901bf851e9
+  DMMaterialTransition: f11f2b7d81fa0436fb537df80ef23e3bc9bbb9f3
+  MBProgressHUD: 1569cf7ace17a8bac47aabfbb8580a49690386d1
+  pop: f667631a5108a2e60d9e8797c9b32ddaf2080bce
+  RAMAnimatedTabBarController: 6f221d7dc647b4266c9e05618c84b5639f190297
+  Realm: e15cd8e7c11d3e576f628ba0b7cb855269b4991c
+  RealmSwift: 3229306d020d96f83b335f87a0dcbf2cef0e6a2b
+  RESideMenu: f24c508404b49c667344c54aba7e590883533958
+  Ruler: 51bd16cc00638702ef71713f80073588a6c7e682
+  SDCycleScrollView: f72904c77698a7f93a41bcbbc2d78b073bf7326c
+  SDWebImage: c325cf02c30337336b95beff20a13df489ec0ec9
+
+PODFILE CHECKSUM: 8a903360ef739ef70c946f34c8c1284a503eea3a
+
+COCOAPODS: 1.0.0

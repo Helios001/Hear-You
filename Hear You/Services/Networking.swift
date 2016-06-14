@@ -1,0 +1,303 @@
+//
+//  HINetworking.swift
+//  Hello
+//
+//  Created by 董亚珣 on 16/3/25.
+//  Copyright © 2016年 snow. All rights reserved.
+//
+
+import UIKit
+
+public enum Method: String, CustomStringConvertible {
+    case OPTIONS = "OPTIONS"
+    case GET = "GET"
+    case HEAD = "HEAD"
+    case POST = "POST"
+    case PUT = "PUT"
+    case PATCH = "PATCH"
+    case DELETE = "DELETE"
+    case TRACE = "TRACE"
+    case CONNECT = "CONNECT"
+    
+    public var description: String {
+        return self.rawValue
+    }
+}
+
+public struct Resource<A>: CustomStringConvertible {
+    let path: String
+    let method: Method
+    let requestBody: NSData?
+    let headers: [String:String]
+    let parse: NSData -> A?
+    
+    public var description: String {
+        let decodeRequestBody: [String: AnyObject]
+        if let requestBody = requestBody {
+            decodeRequestBody = decodeJSON(requestBody)!
+        } else {
+            decodeRequestBody = [:]
+        }
+        
+        return "Resource(Method: \(method), path: \(path), headers: \(headers), requestBody: \(decodeRequestBody))"
+    }
+}
+
+public enum Reason: CustomStringConvertible {
+    case CouldNotParseJSON
+    case NoData
+    case NoSuccessStatusCode(statusCode: Int)
+    case Other(NSError?)
+    
+    public var description: String {
+        switch self {
+        case .CouldNotParseJSON:
+            return "CouldNotParseJSON"
+        case .NoData:
+            return "NoData"
+        case .NoSuccessStatusCode(let statusCode):
+            return "NoSuccessStatusCode: \(statusCode)"
+        case .Other(let error):
+            return "Other, Error: \(error?.description)"
+        }
+    }
+}
+
+func defaultFailureHandler(reason: Reason, errorMessage: String?) {
+    println("\n***************************** Networking Failure *****************************")
+    println("Reason: \(reason)")
+    if let errorMessage = errorMessage {
+        println("errorMessage: >>>\(errorMessage)<<<\n")
+    }
+}
+
+func queryComponents(key: String, value: AnyObject) -> [(String, String)] {
+    func escape(string: String) -> String {
+//        let legalURLCharactersToBeEscaped = ":/?&=;+!@#$()',*"
+        return string.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLHostAllowedCharacterSet())!
+    }
+    
+    var components: [(String, String)] = []
+    if let dictionary = value as? [String: AnyObject] {
+        for (nestedKey, value) in dictionary {
+            components += queryComponents("\(key)[\(nestedKey)]", value: value)
+        }
+    } else if let array = value as? [AnyObject] {
+        for value in array {
+            components += queryComponents("\(key)[]", value: value)
+        }
+    } else {
+        components.appendContentsOf([(escape(key), escape("\(value)"))])
+    }
+    
+    return components
+}
+
+var NetworkActivityCount = 0 {
+didSet {
+    UIApplication.sharedApplication().networkActivityIndicatorVisible = (NetworkActivityCount > 0)
+}
+}
+
+#if STAGING
+    class SessionDelegate: NSObject, NSURLSessionDelegate {
+        
+        func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Void) {
+            
+            completionHandler(.UseCredential, NSURLCredential(forTrust: challenge.protectionSpace.serverTrust!))
+        }
+    }
+    
+let _sessionDelegate = SessionDelegate()
+#endif
+
+public func apiRequest<A>(modifyRequest: NSMutableURLRequest -> (), baseURL: NSURL, resource: Resource<A>, failure: (Reason, String?) -> Void, completion: A -> Void) {
+    #if STAGING
+        let sessionConfig = NSURLSessionConfiguration.defaultSessionConfiguration()
+        let session = NSURLSession(configuration: sessionConfig, delegate: _sessionDelegate, delegateQueue: nil)
+    #else
+        let session = NSURLSession.sharedSession()
+    #endif
+    
+    let url = baseURL.URLByAppendingPathComponent(resource.path)
+    let request = NSMutableURLRequest(URL: url)
+    request.HTTPMethod = resource.method.rawValue
+    
+    func needEncodesParametersForMethod(method: Method) -> Bool {
+        switch method {
+        case .GET, .HEAD, .DELETE:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    func query(parameters: [String: AnyObject]) -> String {
+        var components: [(String, String)] = []
+        for key in Array(parameters.keys).sort(<) {
+            let value: AnyObject! = parameters[key]
+            components += queryComponents(key, value: value)
+        }
+        
+        return (components.map{"\($0)=\($1)"} as [String]).joinWithSeparator("&")
+    }
+    
+    if needEncodesParametersForMethod(resource.method) {
+        if let requestBody = resource.requestBody {
+            if let URLComponents = NSURLComponents(URL: request.URL!, resolvingAgainstBaseURL: false) {
+                URLComponents.percentEncodedQuery = (URLComponents.percentEncodedQuery != nil ? URLComponents.percentEncodedQuery! + "&" : "") + query(decodeJSON(requestBody)!)
+                request.URL = URLComponents.URL
+            }
+        }
+        
+    } else {
+        request.HTTPBody = resource.requestBody
+    }
+    
+    modifyRequest(request)
+    
+    for (key, value) in resource.headers {
+        request.setValue(value, forHTTPHeaderField: key)
+    }
+    
+    #if DEBUG
+        //println(request.cURLCommandLineWithSession(session))
+    #endif
+    
+    let task = session.dataTaskWithRequest(request) { (data, response, error) -> Void in
+        
+        if let httpResponse = response as? NSHTTPURLResponse {
+            
+            if httpResponse.statusCode == 200 {
+                
+                if let responseData = data {
+                    
+                    if let result = resource.parse(responseData) {
+                        completion(result)
+                        
+                    } else {
+                        let dataString = NSString(data: responseData, encoding: NSUTF8StringEncoding)
+                        println(dataString)
+                        
+                        failure(Reason.CouldNotParseJSON, errorMessageInData(data))
+                        println("\(resource)\n")
+                        println(request.cURLCommandLine)
+                    }
+                    
+                } else {
+                    failure(Reason.NoData, errorMessageInData(data))
+                    println("\(resource)\n")
+                    println(request.cURLCommandLine)
+                }
+                
+            } else {
+                failure(Reason.NoSuccessStatusCode(statusCode: httpResponse.statusCode), errorMessageInData(data))
+                println("\(resource)\n")
+                println(request.cURLCommandLine)
+                
+                // 对于 401: errorMessage: >>>HTTP Token: Access denied<<<
+                // 用户需要重新登录，所以
+                
+//                if httpResponse.statusCode == 401 {
+//                    
+//                    // 确保是自家服务
+//                    if let requestHost = request.URL?.host where requestHost == yepBaseURL.host {
+//                        dispatch_async(dispatch_get_main_queue()) {
+//                            YepUserDefaults.userNeedRelogin()
+//                        }
+//                    }
+//                }
+            }
+            
+        } else {
+            failure(Reason.Other(error), errorMessageInData(data))
+            println("\(resource)")
+            println(request.cURLCommandLine)
+        }
+        
+        dispatch_async(dispatch_get_main_queue()) {
+            NetworkActivityCount -= 1
+        }
+    }
+    
+    task.resume()
+    
+    dispatch_async(dispatch_get_main_queue()) {
+        NetworkActivityCount += 1
+    }
+}
+
+func errorMessageInData(data: NSData?) -> String? {
+    if let data = data {
+        if let json = decodeJSON(data) {
+            if let errorMessage = json["error"] as? String {
+                return errorMessage
+            }
+        }
+    }
+    
+    return nil
+}
+
+// Here are some convenience functions for dealing with JSON APIs
+
+public typealias JSONDictionary = [String: AnyObject]
+
+func decodeJSON(data: NSData) -> JSONDictionary? {
+    
+    if data.length > 0 {
+        guard let result = try? NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions()) else {
+            return JSONDictionary()
+        }
+        
+        if let dictionary = result as? JSONDictionary {
+            return dictionary
+        } else if let array = result as? [JSONDictionary] {
+            return ["data": array]
+        } else {
+            return JSONDictionary()
+        }
+        
+    } else {
+        return JSONDictionary()
+    }
+}
+
+func encodeJSON(dict: JSONDictionary) -> NSData? {
+    return dict.count > 0 ? (try? NSJSONSerialization.dataWithJSONObject(dict, options: NSJSONWritingOptions())) : nil
+}
+
+public func jsonResource<A>(path path: String, method: Method, requestParameters: JSONDictionary, parse: JSONDictionary -> A?) -> Resource<A> {
+    return jsonResource(token: nil, path: path, method: method, requestParameters: requestParameters, parse: parse)
+}
+
+public func jsonResource<A>(token token: String?, path: String, method: Method, requestParameters: JSONDictionary, parse: JSONDictionary -> A?) -> Resource<A> {
+    
+    let jsonParse: NSData -> A? = { data in
+        if let json = decodeJSON(data) {
+            return parse(json)
+        }
+        return nil
+    }
+    
+    let jsonBody = encodeJSON(requestParameters)
+    var headers = [
+        "Content-Type": "application/json",
+        "Cookit":"appver=1.5.0.75771",
+        "Referer":"http://music.163.com/",
+    ]
+    if let token = token {
+        headers["Authorization"] = "Token token=\"\(token)\""
+    }
+    
+    let locale = NSLocale.autoupdatingCurrentLocale()
+    if let
+        languageCode = locale.objectForKey(NSLocaleLanguageCode) as? String,
+        countryCode = locale.objectForKey(NSLocaleCountryCode) as? String {
+            headers["Accept-Language"] = languageCode + "-" + countryCode
+    }
+    
+    return Resource(path: path, method: method, requestBody: jsonBody, headers: headers, parse: jsonParse)
+}
+
+

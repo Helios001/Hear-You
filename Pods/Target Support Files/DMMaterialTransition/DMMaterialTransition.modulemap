@@ -1,0 +1,6 @@
+framework module DMMaterialTransition {
+  umbrella header "DMMaterialTransition-umbrella.h"
+
+  export *
+  module * { export * }
+}
