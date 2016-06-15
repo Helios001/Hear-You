@@ -40,9 +40,10 @@ CocoaPods 是一款 Cocoa 项目包管理工具, 如果你尚未安装 Cocoapods
 
 ## 衷心感谢
 
-* 这款音乐播放器是我在浏览ui.cn时看到的一款设计，当时一眼就喜欢上了它，感谢作者的设计！[这是地址](ww.ui.cn/detail/122290.html)
+* 这款音乐播放器是我在浏览ui.cn时看到的一款设计，当时一眼就喜欢上了它，感谢作者的设计！[这是地址](http://www.ui.cn/detail/122290.html)
 
 ## 相关技术文档
 
 * [网络请求抓包篇](http://www.jianshu.com/p/79656bb7e283)
+* [Swift中利用Runtime解决UIButton重复点击的问题](http://www.jianshu.com/p/fe3582acd2d1)
 * 正在努力更新中
