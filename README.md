@@ -12,9 +12,8 @@ Hear You 是基于 AVFoundation 开发的一款优雅简洁的音乐播放器.
 ## 截屏
 
 <p align="center">
-<img src="https://github.com/duming91/Hear-You/raw/master/snapshot/IMG_1746.PNG" alt="screenshots" title="screenshots" width="320"/>
-<img src="https://github.com/duming91/Hear-You/raw/master/snapshot/IMG_1751.PNG" alt="screenshots" title="screenshots" width="320"/>
-<img src="https://github.com/duming91/Hear-You/raw/master/snapshot/play.gif" alt="screenshots" title="screenshots" width="320"/>
+<img src="https://github.com/duming91/Hear-You/raw/master/snapshot/frontpage.gif" alt="screenshots" title="screenshots" width="320"/>
+<img src="https://github.com/duming91/Hear-You/raw/master/snapshot/player.gif" alt="screenshots" title="screenshots" width="320"/>
 </p>
 
 ## 编译配置
