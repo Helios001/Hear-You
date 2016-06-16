@@ -40,7 +40,7 @@ class FindMusicCollection: UICollectionViewController, UICollectionViewDelegateF
         // 自定义collection布局
         let layout = FindMusicCollectionLayout()
         layout.sectionInset = UIEdgeInsetsMake(0, 10, 0, 10)
-        collectionView?.collectionViewLayout = FindMusicCollectionLayout()
+        collectionView?.collectionViewLayout = layout
         
         // 注册collectionCell
         collectionView?.registerNib(UINib.init(nibName: "FrontpageTopView", bundle: NSBundle.mainBundle()), forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: "MusicCollectionTop")
