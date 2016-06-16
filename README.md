@@ -44,4 +44,6 @@ CocoaPods 是一款 Cocoa 项目包管理工具, 如果你尚未安装 Cocoapods
 
 * [网络请求抓包篇](http://www.jianshu.com/p/79656bb7e283)
 * [Swift中利用Runtime解决UIButton重复点击的问题](http://www.jianshu.com/p/fe3582acd2d1)
+* [UICollectionView SectionHeader悬浮](http://www.jianshu.com/p/060163c03e90)
+* [Swift变量对外只读，对内可读写](http://www.jianshu.com/p/7a432da1a6ea)
 * 正在努力更新中
